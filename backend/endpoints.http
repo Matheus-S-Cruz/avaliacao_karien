@@ -1,0 +1,25 @@
+GET http://localhost:3000/produtos
+
+###
+
+POST http://localhost:3000/produtos
+Content-Type: application/json
+
+{
+    "nome": "Pipoca",
+    "quantidade": 25
+}
+
+###
+
+PUT http://localhost:3000/produtos/1
+Content-Type: application/json
+
+{ 
+    "nome": "dasdsad lalalfsdal",
+    "quantidade": 30
+}
+
+###
+
+DELETE http://localhost:3000/produtos/1
