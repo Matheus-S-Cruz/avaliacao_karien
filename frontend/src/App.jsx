@@ -4,8 +4,9 @@ import axios from 'axios';
 function App() {
   const [produtos, setProdutos] = useState([]);
   const [newProduto, setNewProduto] = useState({ nome: '', quantidade: 0 });
+  const [editingProduto, setEditingProduto] = useState(null); // Estado para controle de edição
 
-  // Fetch produtos function
+  // Função para buscar produtos
   const fetchProdutos = async () => {
     try {
       const response = await axios.get('http://localhost:3000/produtos');
@@ -15,40 +16,44 @@ function App() {
     }
   };
 
-  // Fetch produtos on component mount
+  // Buscar produtos ao montar o componente
   useEffect(() => {
     fetchProdutos();
   }, []);
 
-  // Create a new produto
+  // Criar um novo produto
   const createProduto = async () => {
     try {
       await axios.post('http://localhost:3000/produtos', newProduto);
-      // Limpe o formulário após a criação
       setNewProduto({ nome: '', quantidade: 0 });
-      // Atualize a lista de produtos após a criação
       fetchProdutos();
     } catch (error) {
       console.error('Erro ao criar produto:', error);
     }
   };
 
-  // Update an existing produto
-  const updateProduto = async (id, produto) => {
+  // Atualizar um produto existente
+  const updateProduto = async () => {
     try {
-      await axios.put(`http://localhost:3000/produtos/${id}`, produto);
-      // Atualize a lista de produtos após a atualização
+      await axios.put(`http://localhost:3000/produtos/${editingProduto.id}`, newProduto);
+      setEditingProduto(null); // Limpar o estado de edição após a atualização
+      setNewProduto({ nome: '', quantidade: 0 }); // Limpar o formulário
       fetchProdutos();
     } catch (error) {
       console.error('Erro ao atualizar produto:', error);
     }
   };
 
-  // Delete a produto
+  // Iniciar a edição de um produto
+  const editProduto = (produto) => {
+    setEditingProduto(produto); // Definir o produto como sendo editado
+    setNewProduto({ nome: produto.nome, quantidade: produto.quantidade }); // Preencher os campos com os dados do produto
+  };
+
+  // Excluir um produto
   const deleteProduto = async (id) => {
     try {
       await axios.delete(`http://localhost:3000/produtos/${id}`);
-      // Atualize a lista de produtos após a exclusão
       fetchProdutos();
     } catch (error) {
       console.error('Erro ao excluir produto:', error);
@@ -59,7 +64,7 @@ function App() {
     <div>
       <h1>Estoque</h1>
       <div>
-        <h2>Criar Novo Produto</h2>
+        <h2>{editingProduto ? 'Atualizar Produto' : 'Criar Novo Produto'}</h2>
         <input
           type="text"
           placeholder="Nome do Produto"
@@ -68,11 +73,13 @@ function App() {
         />
         <input
           type="number"
-          placeholder="Preço do Produto"
+          placeholder="Quantidade do Produto"
           value={newProduto.quantidade}
           onChange={(e) => setNewProduto({ ...newProduto, quantidade: e.target.value })}
         />
-        <button onClick={createProduto}>Criar Produto</button>
+        <button onClick={editingProduto ? updateProduto : createProduto}>
+          {editingProduto ? 'Salvar Alterações' : 'Criar Produto'}
+        </button>
       </div>
       <div>
         <h2>Lista de Produtos</h2>
@@ -80,9 +87,7 @@ function App() {
           {produtos.map((produto) => (
             <li key={produto.id}>
               {produto.nome} - Quantidade: {produto.quantidade}
-              <button onClick={() => updateProduto(produto.id, produto)}>
-                Atualizar
-              </button>
+              <button onClick={() => editProduto(produto)}>Editar</button>
               <button onClick={() => deleteProduto(produto.id)}>Excluir</button>
             </li>
           ))}
